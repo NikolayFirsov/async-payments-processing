@@ -1,3 +1,7 @@
+x-app-env: &app-env
+  DATABASE_URL: postgresql+asyncpg://payments:payments@postgres:5432/payments
+  RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -5,6 +9,8 @@ services:
       POSTGRES_USER: payments
       POSTGRES_PASSWORD: payments
       POSTGRES_DB: payments
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -25,9 +31,19 @@ services:
       timeout: 10s
       retries: 20
 
+  migrate:
+    build: .
+    command: alembic upgrade head
+    environment: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build: .
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    environment: *app-env
     ports:
       - "8000:8000"
     depends_on:
@@ -35,6 +51,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:
