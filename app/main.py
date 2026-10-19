@@ -3,10 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api import router
+from app.broker import broker, declare_configuration
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await broker.start()
+    await declare_configuration(broker)
     # startup
     yield
     # shutdown

@@ -9,5 +9,9 @@ class Settings(BaseSettings):
 
     api_key: str
 
+    # retry
+    max_attempts: int = 3
+    retry_base_delay_sec: int = 2  # экспонента
+
 
 settings = Settings()
