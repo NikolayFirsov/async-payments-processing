@@ -46,3 +46,9 @@ class PaymentDetail(BaseModel):
     webhook_url: str = Field(title='Webhook URL')
     created_at: datetime = Field(title='Дата создания платежа')
     processed_at: datetime | None = Field(title='Дата обработки платежа', default=None)
+
+
+class PaymentEvent(BaseModel):
+    """Сообщение в очереди payments.new"""
+
+    payment_id: uuid.UUID

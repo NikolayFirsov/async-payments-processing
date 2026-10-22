@@ -1,18 +1,25 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.api import router
 from app.broker import broker, declare_configuration
+from app.outbox import relay_loop
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await broker.start()
     await declare_configuration(broker)
-    # startup
-    yield
-    # shutdown
+    stop = asyncio.Event()
+    relay = asyncio.create_task(relay_loop(broker, stop))
+    try:
+        yield
+    finally:
+        stop.set()
+        await relay
+        await broker.close()
 
 
 app = FastAPI(title='Payment Processing Service', lifespan=lifespan)

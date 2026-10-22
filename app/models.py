@@ -4,7 +4,7 @@ from decimal import Decimal
 from datetime import datetime, timezone
 
 from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy import Numeric, Text, String, DateTime, Enum
+from sqlalchemy import Numeric, Text, String, DateTime, Enum, Index, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -62,5 +62,17 @@ class Payment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    webhook_delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-#TODO Outbox(Base)
+
+class Outbox(Base):
+    __tablename__ = 'outbox'
+    __table_args__ = (
+        Index('ix_outbox_unpublished', 'id', postgresql_where=text('published_at IS NULL')),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import require_api_key
 from app.db import get_session
-from app.models import Payment
+from app.models import Payment, Outbox
 from app.schemas import PaymentCreated, PaymentDetail, PaymentCreate
 
 
@@ -56,7 +56,7 @@ async def create_payment(
     )
     session.add(payment)
 
-    #TODO аутбокс
+    session.add(Outbox(event_type='payments.new', payload={'payment_id': str(payment.id)}))
 
     try:
         await session.commit()
