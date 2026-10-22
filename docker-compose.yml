@@ -10,8 +10,6 @@ services:
       POSTGRES_USER: payments
       POSTGRES_PASSWORD: payments
       POSTGRES_DB: payments
-    ports:
-      - "5432:5432" #TODO убрать
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +21,6 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
     ports:
-      - "5672:5672" #TODO убрать
       - "15672:15672"
     volumes:
       - rabbitdata:/var/lib/rabbitmq
